@@ -1,0 +1,7 @@
+run 20000000
+eject
+mount zm.rom
+type b
+run 10000000
+quit
+
