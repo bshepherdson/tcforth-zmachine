@@ -4,7 +4,7 @@
 
 : zstart ( -- )
   read-low-mem
-  $7878 1 print-ra
+  $999c 1 print-ra
 ;
 
 \ Bootstrapping

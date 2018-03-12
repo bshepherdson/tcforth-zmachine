@@ -61,7 +61,6 @@ VARIABLE shift
   zstr-word @   zstr-index @ 5 -  ( word index' )
   dup zstr-index ! \ Save the new index.
   rshift 31 and ( zchar )
-  dup (log)
 ;
 
 

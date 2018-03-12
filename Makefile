@@ -1,7 +1,7 @@
 .PHONY: bootstrap
 default: bootstrap
 
-FORTH_FILES := base.fs header.fs strings.fs main.fs
+FORTH_FILES := output.fs base.fs header.fs strings.fs main.fs
 
 EMULATOR ?= dcpu
 
