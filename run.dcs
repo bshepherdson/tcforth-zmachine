@@ -1,0 +1,5 @@
+run 20000000
+eject
+mount Zork1.z5
+type b
+

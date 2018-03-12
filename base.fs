@@ -2,6 +2,7 @@
 
 CREATE mem $8000 allot
 
+\ NB: 2VARIABLEs are stored big-endian.
 : 2VARIABLE CREATE 2 allot ;
 
 2VARIABLE zpc
@@ -50,9 +51,11 @@ VARIABLE zsp    zstack zsp !
 \ Byte addresses are always in mem.
 : rbba ( ba -- b ) mem rb ;
 : wbba ( b ba -- ) mem wb ;
+: rwba ( ba -- w ) mem rw ;
+: wwba ( w ba -- ) mem ww ;
 
-: ra>block ( ra -- block ) 10 lshift swap   10 rshift or ;
-: ra>index ( ra -- index ) drop 1024 and ;
+: ra>block ( ra -- block ) 6 lshift swap   10 rshift or ;
+: ra>index ( ra -- index ) drop 1023 and ;
 
 8 CONSTANT #caches
 512 CONSTANT /buffer
@@ -60,15 +63,17 @@ CREATE caches #caches allot
 CREATE block-buffers   #caches /buffer * allot
 VARIABLE next-buffer \ Holds the index of the next buffer in the round-robin.
 
+0 next-buffer !
+
 : cache-buffer ( i -- addr ) /buffer * block-buffers + ;
 : next-buffer ( -- i ) next-buffer @
   dup 1+ dup #caches >= IF drop 0 THEN next-buffer ! ;
 
 \ Ensure a particular block is cached, and return its address.
 : cache ( blk -- addr )
-  #caches 0 DO i caches + @ over = IF i cache-buffer UNLOOP EXIT THEN LOOP
-  next-buffer   2dup caches + ! \ Write the block number into the cache.
-  cache-buffer dup >R blk@ R> ;
+  #caches 0 DO i caches + @ over = IF drop i cache-buffer UNLOOP EXIT THEN LOOP
+  next-buffer   ( blk ix-cache ) 2dup caches + ! ( blk ix-cache )
+  cache-buffer ( blk cache ) dup >R blk@ R> ;
 
 \ Real addresses are double-cell values.
 : ra> ( ra -- byte-index base ) 2dup ra>block cache >R ra>index R> ;
@@ -87,13 +92,4 @@ VARIABLE next-buffer \ Holds the index of the next buffer in the round-robin.
 VARIABLE pa-shift
 : pa ( pa -- ra ) dup pa-shift @ lshift   swap 16 pa-shift @ - rshift or ;
 
-
-\ Initialization
-: read-low-mem ( -- ) 64 0 DO i dup /buffer * mem +   blk@ LOOP ;
-
-: zstart ( -- ) read-low-mem S" ZM ready: " type hex mem . cr decimal ;
-
-\ Testing
-' zstart (main!)
-key drop (bootstrap)
 
