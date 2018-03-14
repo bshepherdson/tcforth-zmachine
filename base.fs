@@ -18,6 +18,7 @@ VARIABLE (version)
 \ Z-machine stack is empty-ascending.
 CREATE zstack 64 allot
 VARIABLE zsp    zstack zsp !
+VARIABLE zfp    0      zfp !
 
 : push ( w -- ) zsp @ !   1 zsp +! ;
 : pop  ( -- w ) 1 zsp -!   zsp @ @ ;
@@ -92,4 +93,32 @@ VARIABLE next-buffer \ Holds the index of the next buffer in the round-robin.
 VARIABLE pa-shift
 : pa ( pa -- ra ) dup pa-shift @ lshift   swap 16 pa-shift @ - rshift or ;
 
+
+\ Peeks the current value at PC.
+: pc@  ( -- b ) zpc 2@ rbra ;
+: pc@w ( -- w ) zpc 2@ rwra ;
+
+\ Gets the value at PC, and advances PC past it.
+: pc@+  ( -- b ) pc@  1 pc+ ;
+: pc@w+ ( -- w ) pc@w 2 pc+ ;
+
+
+\ Move and fill for Z-machine values. All address are byte addresses.
+
+\ Copies forward.
+: zmove+ ( src dst u -- ) 0 DO over i + rbba over i + wbba LOOP 2drop ;
+\ Copies backward.
+: zmove- ( src dst u -- )
+  1- 0 swap DO over i + rbba over i + wbba -1 +LOOP 2drop ;
+
+\ Copies so as to avoid corruption.
+: zmove ( src dst u -- )
+  >R 2dup < R> swap ( src dst u lower? )
+  IF zmove- ELSE zmove+ THEN
+;
+
+: zfill ( buf u b -- )
+  -rot over + swap ( b end start )
+  DO dup i wbba LOOP drop
+;
 
